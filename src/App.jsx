@@ -940,7 +940,7 @@ export default function App() {
         processedFile = new File([converted], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
       }
 
-      setUploadStatus('Removing background...');
+      setUploadStatus('Removing background magically...');
       const noBgBlob = await imglyRemoveBackground(processedFile);
 
       setUploadStatus('Generating AI tags...');
@@ -1211,31 +1211,30 @@ export default function App() {
           <h2 style={{ ...styles.wordmark, fontSize: '28px', marginBottom: '8px' }}>Freddie's Wardrobe</h2>
           <p style={{ marginBottom: '24px', opacity: 0.8, fontSize: '14px' }}>Please enter your password to access your closet.</p>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-  {/* Hidden username so Safari/iCloud Keychain treats this as a real login */}
-  <input
-    type="text"
-    name="username"
-    autoComplete="username"
-    defaultValue="izzy"
-    readOnly
-    tabIndex={-1}
-    aria-hidden="true"
-    style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
-  />
-  <input
-    type="password"
-    name="password"
-    id="password"
-    autoComplete="current-password"
-    value={passwordInput}
-    onChange={(e) => setPasswordInput(e.target.value)}
-    style={{ ...styles.inputField, marginBottom: 0 }}
-    placeholder="Password"
-    required
-  />
-  <button type="submit" disabled={isLoggingIn} style={{ ...styles.primaryBtn, opacity: isLoggingIn ? 0.6 : 1 }}>{isLoggingIn ? 'Checking...' : 'Unlock Closet'}</button>
-</form>
+            {/* Hidden username so Safari/iCloud Keychain treats this as a real login */}
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              defaultValue="freddie"
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+              style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+            />
+            <input
+              type="password"
+              name="password"
+              id="password"
+              autoComplete="current-password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              style={{ ...styles.inputField, marginBottom: 0 }}
+              placeholder="Password"
+              required
+            />
+            <button type="submit" disabled={isLoggingIn} style={{ ...styles.primaryBtn, opacity: isLoggingIn ? 0.6 : 1 }}>{isLoggingIn ? 'Checking...' : 'Unlock Closet'}</button>
+          </form>
         </div>
       </div>
     );
