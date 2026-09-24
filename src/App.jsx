@@ -940,7 +940,7 @@ export default function App() {
         processedFile = new File([converted], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
       }
 
-      setUploadStatus('Removing background magically...');
+      setUploadStatus('Removing background...');
       const noBgBlob = await imglyRemoveBackground(processedFile);
 
       setUploadStatus('Generating AI tags...');
