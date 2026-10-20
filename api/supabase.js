@@ -44,7 +44,7 @@ const uploadImage = async (supabase, prefix, dataUrl) => {
 // Only pass known columns through to the database.
 const pickClothFields = (item = {}) => {
   const out = {};
-  for (const key of ['id', 'layer', 'name', 'colors', 'occasion', 'temperature', 'weather', 'hiddenTags', 'image']) {
+  for (const key of ['id', 'layer', 'name', 'brand', 'colors', 'occasion', 'temperature', 'weather', 'hiddenTags', 'image']) {
     if (item[key] !== undefined) out[key] = item[key];
   }
   if (out.layer !== undefined && !VALID_LAYERS.includes(out.layer)) out.layer = 'tops';
