@@ -33,7 +33,8 @@ const normalizeItem = (item) => {
     colors: Array.isArray(item.colors) ? item.colors : (item.color ? [item.color] : ['black']),
     temperature: Array.isArray(item.temperature) ? item.temperature : (item.weather === 'cold' ? ['cold'] : (item.weather === 'hot' ? ['hot'] : ['medium'])),
     weather: Array.isArray(item.weather) ? item.weather : (item.weather ? [item.weather] : ['sun', 'cloudy']),
-    hiddenTags: Array.isArray(item.hiddenTags) ? item.hiddenTags : []
+    hiddenTags: Array.isArray(item.hiddenTags) ? item.hiddenTags : [],
+    brand: typeof item.brand === 'string' ? item.brand : ''
   };
 };
 
@@ -190,9 +191,9 @@ const areColorsCompatible = (c1Arr, c2Arr) => {
 
 const getThemeStyles = (theme) => ({
   appContainer: { backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', padding: '20px', display: 'flex', flexDirection: 'column' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' },
-  wordmark: { margin: 0, fontFamily: 'Fraunces, serif', letterSpacing: '0.02em', color: theme.text, fontSize: 'clamp(18px, 5.5vw, 45px)', lineHeight: 1.2 },
-  headerRight: { display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  wordmark: { margin: 0, fontFamily: 'Fraunces, serif', letterSpacing: '0.02em', color: theme.text },
+  headerRight: { display: 'flex', gap: '10px' },
   iconBtn: { background: 'none', border: 'none', color: theme.text, cursor: 'pointer' },
   addBtn: { backgroundColor: theme.accent, color: theme.bg, border: 'none', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer' },
   paletteScrim: { position: 'fixed', inset: 0, zIndex: 10 },
@@ -461,6 +462,9 @@ const MetadataEditorModal = ({ item, theme, styles, onSave, onClose, onDelete })
             <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', opacity: 0.8 }}>Item Name</label>
             <input style={styles.inputField} value={edited.name || ''} onChange={e => setEdited({ ...edited, name: e.target.value })} />
 
+            <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', opacity: 0.8 }}>Brand</label>
+            <input style={styles.inputField} value={edited.brand || ''} onChange={e => setEdited({ ...edited, brand: e.target.value })} placeholder="e.g. Zara, Nike..." />
+
             <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', opacity: 0.8 }}>Layer</label>
             <select style={styles.selectField} value={edited.layer || ''} onChange={e => setEdited({ ...edited, layer: e.target.value })}>
               {LAYERS.map(l => <option key={l} value={l}>{LAYER_LABELS[l]}</option>)}
@@ -630,6 +634,7 @@ export default function App() {
   const [wardrobe, setWardrobe] = useState(() => INITIAL_WARDROBE.map(normalizeItem));
   const [savedOutfits, setSavedOutfits] = useState([]);
   const [outfitFilterText, setOutfitFilterText] = useState('');
+  const [itemFilterText, setItemFilterText] = useState('');
 
   const [activeFilters, setActiveFilters] = useState({ temperature: [], weather: [], colors: [], occasion: [] });
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -829,6 +834,13 @@ export default function App() {
     return true;
   };
 
+  // Matches on item name or brand, same case-insensitive "contains" search used for saved outfits.
+  const itemMatchesSearch = (item, searchText) => {
+    if (!searchText) return true;
+    const search = searchText.toLowerCase();
+    return (item.name || '').toLowerCase().includes(search) || (item.brand || '').toLowerCase().includes(search);
+  };
+
   const outfitMatchesFilters = (outfit) => {
     const { temperature, weather, colors, occasion } = activeFilters;
     const meta = outfit.metadata || {};
@@ -840,7 +852,7 @@ export default function App() {
   };
 
   const getFilteredItems = (layerKey) => {
-    const items = wardrobe.filter(item => item.layer === layerKey && itemMatchesFilters(item));
+    const items = wardrobe.filter(item => item.layer === layerKey && itemMatchesFilters(item) && itemMatchesSearch(item, itemFilterText));
     return [{ id: `none-${layerKey}`, name: 'None', layer: layerKey, isNone: true }, ...items];
   };
 
@@ -940,7 +952,7 @@ export default function App() {
         processedFile = new File([converted], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
       }
 
-      setUploadStatus('Removing background...');
+      setUploadStatus('Removing background magically...');
       const noBgBlob = await imglyRemoveBackground(processedFile);
 
       setUploadStatus('Generating AI tags...');
@@ -1211,22 +1223,8 @@ export default function App() {
           <h2 style={{ ...styles.wordmark, fontSize: '28px', marginBottom: '8px' }}>Freddie's Wardrobe</h2>
           <p style={{ marginBottom: '24px', opacity: 0.8, fontSize: '14px' }}>Please enter your password to access your closet.</p>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Hidden username so Safari/iCloud Keychain treats this as a real login */}
-            <input
-              type="text"
-              name="username"
-              autoComplete="username"
-              defaultValue="freddie"
-              readOnly
-              tabIndex={-1}
-              aria-hidden="true"
-              style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
-            />
             <input
               type="password"
-              name="password"
-              id="password"
-              autoComplete="current-password"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               style={{ ...styles.inputField, marginBottom: 0 }}
@@ -1283,6 +1281,14 @@ export default function App() {
 
         {activeTab === 'wardrobe' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <input
+              type="text"
+              placeholder="Search your wardrobe by name or brand..."
+              value={itemFilterText}
+              onChange={(e) => setItemFilterText(e.target.value)}
+              style={styles.inputField}
+            />
+
             {renderFilterBar()}
 
             {activeDressingRoomItems.length > 0 && (
